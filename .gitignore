@@ -1,6 +1,8 @@
 # Docker volume folder
 .data
 
+import/*.csv
+
 .env
 
 .idea

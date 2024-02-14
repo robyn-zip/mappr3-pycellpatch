@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, BigInteger
+import enum
+
+from geoalchemy2 import Geometry
+from sqlalchemy import Column, Integer, Enum, Boolean, BigInteger, SmallInteger
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -6,21 +9,51 @@ from datetime import datetime
 Base = declarative_base()
 
 
+class RadioTechEnum(enum.Enum):
+    unknown = 0
+    gsm = 1
+    umts = 2
+    lte = 3
+    nr = 4
+
+
+# MLS base data goes in this table
 class CellObservation(Base):
     __tablename__ = 'raw_observations'
 
-    id = Column(Integer, primary_key=True)
-    radio = Column(String)
-    mcc = Column(Integer)
-    net = Column(Integer)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Network identifier
+    mcc = Column(SmallInteger, nullable=False)
+    mnc = Column(SmallInteger, nullable=False)
+
+    # Cell identifiers
+    rat = Column(Enum(RadioTechEnum), nullable=False)
     area = Column(Integer)
-    cell = Column(Integer)
-    unit = Column(Integer)
-    lon = Column(Float)
-    lat = Column(Float)
+
+    # For LTE: eNB, SectorID
+    nid = Column(Integer)
+    sid = Column(SmallInteger)
+
+    cid = Column(Integer)
+    pci = Column(SmallInteger, default=0)
+
+    # Cell location information
+    coordinates = Column(Geometry('POINT'))
     range = Column(Integer)
+
+    # Cell meta-data
     samples = Column(Integer)
-    changeable = Column(Boolean)
     created = Column(BigInteger)
     updated = Column(BigInteger)
-    averageSignal = Column(Integer, default=0)
+    average_signal = Column(SmallInteger, default=0)
+
+    # Pending update of other data tables
+    pending_update = Column(Boolean, default=True)
+
+    def __repr__(self):
+        return f"<CellObservation({self.mcc=}, {self.mnc=}, {self.id=}, {self.nid=}, {self.cid=}, {self.coordinates=})>"
+
+
+#class CellNodes(Base):
+#    __tablename__ = 'calculated_nodes'
