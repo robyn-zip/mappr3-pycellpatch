@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  postgis:
+    container_name: mappr3_postgis
+    image: postgis/postgis:16-3.4
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: mappr3_cells
+      POSTGRES_USER: ${CELLS_DB_USERNAME:-mappr3_user}
+      POSTGRES_PASSWORD: ${CELLS_DB_PASSWORD:-Password123}
+    restart: always
+    volumes:
+      - ./.data/postgis:/var/lib/postgresql/data
