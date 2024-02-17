@@ -26,9 +26,12 @@ class CellDatabase:
             self._engine = create_engine(self._url, echo=False)
             self._engine.connect().close()
         except OperationalError:
-            logging.warning('Database connection failure, trying without SSL')
-            self._url.query['sslmode'] = 'prefer'
-            self._engine = create_engine(self._url, echo=False)
+            try:
+                logging.warning('Database connection failure, trying without SSL')
+                self._url.query['sslmode'] = 'prefer'
+                self._engine = create_engine(self._url, echo=False)
+            except OperationalError as err:
+                logging.error('Failed to connect to database: %s', err.code)
 
         self._session = sessionmaker(bind=self._engine)
         self._db = self._session()

@@ -1,15 +1,55 @@
 from alive_progress import alive_bar
 import logging
 from models import CellObservation, RadioTechEnum
+from pathlib import Path
+
+
+RAT_MAP = {
+    'gsm': RadioTechEnum.gsm,
+    'umts': RadioTechEnum.umts,
+    'lte': RadioTechEnum.lte,
+    'nr': RadioTechEnum.nr
+}
 
 
 # Turns cell ID into eNB and sector ID
-def decompose_cid(cid: int) -> (str, str):
+def decompose_cid(cid: int) -> (int, int):
     binstr = bin(cid)
-    sid = str(int(binstr[-8:], 2))
-    nid = str(int(binstr[:-8], 2))
+    sid = int(binstr[-8:], 2)
+    nid = int(binstr[:-8], 2)
 
     return nid, sid
+
+
+def create_observation_from_csv_row(row: list) -> CellObservation:
+    enb, sid = decompose_cid(int(row[4]))
+    print(row)
+    return CellObservation(
+        rat=RAT_MAP.get(row[0], RadioTechEnum.unknown),
+        mcc=int(row[1]),
+        mnc=int(row[2]),
+        area=int(row[3]),
+        cid=int(row[4]),
+        pci=int(row[5] or 0),
+        coordinates=f'POINT({row[6]} {row[7]})',
+        range=int(row[8]),
+        samples=int(row[9]),
+        created=row[11],
+        updated=row[12],
+        average_signal=int(row[13] or 0),
+        nid=enb,
+        sid=sid
+    )
+
+
+def list_files_in_dir(dir_path: str) -> list[Path]:
+    path = Path(dir_path)
+    if path.is_dir():
+        files = [file for file in path.iterdir() if file.is_file() and file.suffix == '.csv']
+        return files
+    else:
+        logging.error(f"{dir_path} is not a valid directory.")
+        return []
 
 
 def count_file_lines(file_path: str) -> int:
@@ -19,17 +59,10 @@ def count_file_lines(file_path: str) -> int:
     return num_lines
 
 
-def read_csv_to_dict(file_path: str) -> list[CellObservation]:
+def read_cell_observations(file_path: str) -> list[CellObservation]:
     line_number = 0
     line_total = count_file_lines(file_path)
     cell_observations = []
-
-    rat_map = {
-        'gsm': RadioTechEnum.gsm,
-        'umts': RadioTechEnum.umts,
-        'lte': RadioTechEnum.lte,
-        'nr': RadioTechEnum.nr
-    }
 
     with alive_bar(line_total) as bar:
         # Note: We are not using and CSV reading functions here as they're slower than what we are about to do :)
@@ -40,7 +73,7 @@ def read_csv_to_dict(file_path: str) -> list[CellObservation]:
             while line:
                 line_number += 1
 
-                line = f.readline()
+                line = f.readline().strip()
                 if ',' not in line:
                     logging.warning(f'No CSV data at line: {line_number} in: {file_path}')
                     continue
@@ -57,27 +90,7 @@ def read_csv_to_dict(file_path: str) -> list[CellObservation]:
                 if cid < 256:
                     continue
 
-                enb, sid = decompose_cid(cid)
-
-                observation = CellObservation(
-                    rat=rat_map.get(row[0], RadioTechEnum.unknown),
-                    mcc=row[1],
-                    mnc=row[2],
-                    area=row[3],
-                    cid=cid,
-                    pci=row[5],
-                    coordinates=f'POINT({row[6]} {row[7]})',
-                    range=row[8],
-                    samples=row[9],
-                    created=row[11],
-                    updated=row[12],
-                    average_signal=row[13] or 0,
-                    nid=enb,
-                    sid=sid
-                )
-
-                if observation.mcc == "234":
-                    print(observation)
+                observation = create_observation_from_csv_row(row)
 
                 cell_observations.append(observation)
                 bar()
@@ -86,6 +99,6 @@ def read_csv_to_dict(file_path: str) -> list[CellObservation]:
 
 
 if __name__ == '__main__':
-    #print(count_file_lines('../import/MLS-full-cell-export-2024-02-12T000000.csv'))
-    #read_csv_to_dict('../import/MLS-full-cell-export-2024-02-12T000000.csv')
-    read_csv_to_dict('../import/MLS-diff-cell-export-2024-02-14T200000.csv')
+    # print(count_file_lines('../import/MLS-full-cell-export-2024-02-12T000000.csv'))
+    # read_cell_observations('../import/MLS-full-cell-export-2024-02-12T000000.csv')
+    read_cell_observations('../import/MLS-diff-cell-export-2024-02-14T200000.csv')

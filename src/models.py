@@ -1,9 +1,7 @@
 import enum
-
 from geoalchemy2 import Geometry
 from sqlalchemy import Column, Integer, Enum, Boolean, BigInteger, SmallInteger
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
 
 
 Base = declarative_base()
@@ -55,5 +53,7 @@ class CellObservation(Base):
         return f"<CellObservation({self.mcc=}, {self.mnc=}, {self.id=}, {self.nid=}, {self.cid=}, {self.coordinates=})>"
 
 
-#class CellNodes(Base):
-#    __tablename__ = 'calculated_nodes'
+class CellNodes(Base):
+    __tablename__ = 'calculated_nodes'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
