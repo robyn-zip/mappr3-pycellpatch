@@ -53,7 +53,43 @@ class CellObservation(Base):
         return f"<CellObservation({self.mcc=}, {self.mnc=}, {self.id=}, {self.nid=}, {self.cid=}, {self.coordinates=})>"
 
 
-class CellNodes(Base):
-    __tablename__ = 'calculated_nodes'
+class LTECellNode(Base):
+    __tablename__ = 'lte_calculated_nodes'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Network identifier
+    mcc = Column(SmallInteger, nullable=False)
+    mnc = Column(SmallInteger, nullable=False)
+
+    area = Column(Integer, nullable=False)
+    enb = Column(Integer, nullable=False)
+
+    coordinates = Column(Geometry(geometry_type='POINT', srid=4326))
+    range = Column(Integer)
+
+    samples = Column(Integer, default=1, nullable=False)
+    created = Column(BigInteger, nullable=False)
+    updated = Column(BigInteger, nullable=False)
+
+
+class LTECellSector(Base):
+    __tablename__ = 'lte_calculated_sectors'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+
+    # Network identifier
+    mcc = Column(SmallInteger, nullable=False)
+    mnc = Column(SmallInteger, nullable=False)
+
+    area = Column(Integer, nullable=False)
+    enb = Column(Integer, nullable=False)
+    sid = Column(SmallInteger, nullable=False)
+    pci = Column(SmallInteger, nullable=False)
+
+    coordinates = Column(Geometry(geometry_type='POINT', srid=4326))
+    range = Column(Integer)
+
+    samples = Column(Integer, default=1, nullable=False)
+    created = Column(BigInteger, nullable=False)
+    updated = Column(BigInteger, nullable=False)
