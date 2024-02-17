@@ -1,3 +1,4 @@
+from alive_progress import alive_it
 from db import CellDatabase
 from dotenv import load_dotenv
 from sqlalchemy import and_
@@ -26,16 +27,15 @@ def main():
     # Parse all files in the import folder
     file_data = {}
     for file in list_files_in_dir(IMPORT_DIR):
-        if 'diff' in file.name:
-            logging.info(f'Parsing file: {file}')
-            file_data[file.name] = read_cell_observations(f"{IMPORT_DIR}/{file.name}")
+        logging.info(f'Parsing file: {file}')
+        file_data[file.name] = read_cell_observations(f"{IMPORT_DIR}/{file.name}")
 
     # Loop all observations
     for file in file_data:
         sess = db.get_session()
 
         total, updates, errors, additions = 0, 0, 0, 0
-        for cell in file_data[file]:
+        for cell in alive_it(file_data[file]):
             total += 1
 
             # Check if cell id already exists for network
@@ -58,7 +58,7 @@ def main():
                 continue
 
             # Always take the newer measurement
-            if cell.updated > observations[0].updated:
+            if int(cell.updated) > int(observations[0].updated):
                 logging.info(f'Updating {cell.mcc}-{cell.mnc}: {cell.cid}!')
                 sess.delete(observations[0])
                 sess.add(cell)

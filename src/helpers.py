@@ -23,7 +23,7 @@ def decompose_cid(cid: int) -> (int, int):
 
 def create_observation_from_csv_row(row: list) -> CellObservation:
     enb, sid = decompose_cid(int(row[4]))
-    print(row)
+
     return CellObservation(
         rat=RAT_MAP.get(row[0], RadioTechEnum.unknown),
         mcc=int(row[1]),
@@ -72,6 +72,7 @@ def read_cell_observations(file_path: str) -> list[CellObservation]:
 
             while line:
                 line_number += 1
+                bar()
 
                 line = f.readline().strip()
                 if ',' not in line:
@@ -84,6 +85,8 @@ def read_cell_observations(file_path: str) -> list[CellObservation]:
                 # Skip rows that aren't LTE data points
                 if row[0] != 'LTE':
                     continue
+                if row[1] != '234':
+                    continue
 
                 # Check Cell ID is valid
                 cid = int(row[4])
@@ -93,7 +96,6 @@ def read_cell_observations(file_path: str) -> list[CellObservation]:
                 observation = create_observation_from_csv_row(row)
 
                 cell_observations.append(observation)
-                bar()
 
     return cell_observations
 

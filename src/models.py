@@ -37,7 +37,7 @@ class CellObservation(Base):
     pci = Column(SmallInteger, default=0)
 
     # Cell location information
-    coordinates = Column(Geometry('POINT'))
+    coordinates = Column(Geometry(geometry_type='POINT', srid=4326))
     range = Column(Integer)
 
     # Cell meta-data

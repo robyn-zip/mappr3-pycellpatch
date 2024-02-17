@@ -5,3 +5,4 @@ psycopg-binary==3.1.18
 psycopg-pool==3.2.1
 SQLAlchemy==2.0.27
 python-dotenv==1.0.1
+plotly==5.19.0
